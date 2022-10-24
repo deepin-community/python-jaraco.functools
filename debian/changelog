@@ -1,0 +1,78 @@
+python-jaraco.functools (3.4.0-1) unstable; urgency=medium
+
+  * New upstream version 3.4.0
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Thu, 11 Nov 2021 18:27:20 +0000
+
+python-jaraco.functools (3.3.0-2) unstable; urgency=medium
+
+  * Upload to unstable.
+  * Bump Standards-Version to 4.6.0 (from 4.5.1; no further changes).
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Thu, 19 Aug 2021 10:42:40 +0000
+
+python-jaraco.functools (3.3.0-1) experimental; urgency=low
+
+  [ Jeroen Ploemen ]
+  * New upstream release.
+  * Set maintainer (etc.) to my debian email address.
+  * Control:
+    + bump debhelper compat level to 13 (from 12).
+    + bump Standards-Version to 4.5.1 (from 4.5.0; no further changes).
+    + add build-dep on python3-jaraco.classes, needed for the testsuite.
+    + mark test-only build-deps.
+    + set Rules-Requires-Root: no.
+  * Copyright: bump years.
+  * Patches: remove all, no longer needed.
+  * Rules: run upstream testsuite during build.
+  * Watch:
+    + account for github changes.
+    + bump version to 4 (from 3; no further changes).
+
+  [ Debian Janitor ]
+  * Set upstream metadata fields: Bug-Database, Bug-Submit, Repository,
+    Repository-Browse.
+
+  [ Ondřej Nový ]
+  * d/control: Update Vcs-* fields with new Debian Python Team Salsa
+    layout.
+
+  [ Sandro Tosi ]
+  * Use the new Debian Python Team contact name and address
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Wed, 07 Jul 2021 12:39:05 +0000
+
+python-jaraco.functools (3.0.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Clean: add entry to ensure building twice works.
+  * Patches: refresh 02, also strip cov and black options.
+  * Bump Standards-Version to 4.5.0 (from 4.4.1; no further changes).
+  * Rules:
+    + simplify test handling.
+    + switch test files handling to d/pybuild.testfiles.
+
+ -- JCF Ploemen (jcfp) <linux@jcf.pm>  Sat, 29 Feb 2020 13:37:00 +0000
+
+python-jaraco.functools (2.0-2) unstable; urgency=medium
+
+  * Control:
+    + remove python3:provides from binary package.
+    + add build-dep on python3-pytest to support running tests at
+      build time.
+  * Copyright:
+    + clarify the license by updating its name from MIT to Expat.
+    + add comment about the source of the upstream copyright years.
+  * Patches:
+    + add 01_add_missing_namespace_info to make this a namespace
+      package and avoid filename collisions with other jaraco
+      subpackages such as itertools. (Closes: #943763)
+    + add 02_pytest_no_flake8.
+
+ -- JCF Ploemen (jcfp) <linux@jcf.pm>  Sun, 03 Nov 2019 09:41:19 +0000
+
+python-jaraco.functools (2.0-1) unstable; urgency=medium
+
+  * Initial release. (Closes: #941722)
+
+ -- JCF Ploemen (jcfp) <linux@jcf.pm>  Fri, 04 Oct 2019 10:55:24 +0000
