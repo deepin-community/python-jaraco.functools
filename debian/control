@@ -3,20 +3,20 @@ Homepage: https://github.com/jaraco/jaraco.functools
 Section: python
 Priority: optional
 Maintainer: Jeroen Ploemen <jcfp@debian.org>
-Uploaders: Debian Python Team <team+python@tracker.debian.org>
 Build-Depends:
  debhelper-compat (= 13),
  dh-python,
+ pybuild-plugin-pyproject,
  python3-all,
  python3-jaraco.classes <!nocheck>,
  python3-pytest <!nocheck>,
  python3-setuptools,
  python3-setuptools-scm
-Standards-Version: 4.6.0
-Vcs-Git: https://salsa.debian.org/python-team/packages/python-jaraco.functools.git
-Vcs-Browser: https://salsa.debian.org/python-team/packages/python-jaraco.functools
-Testsuite: autopkgtest-pkg-python
+Standards-Version: 4.7.0
+Vcs-Git: https://salsa.debian.org/jcfp/jaraco.functools.git
+Vcs-Browser: https://salsa.debian.org/jcfp/jaraco.functools
 Rules-Requires-Root: no
+Testsuite: autopkgtest-pkg-pybuild
 
 Package: python3-jaraco.functools
 Architecture: all

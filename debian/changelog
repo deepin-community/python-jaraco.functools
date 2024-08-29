@@ -1,3 +1,43 @@
+python-jaraco.functools (4.0.2-1) unstable; urgency=medium
+
+  * New upstream version 4.0.2.
+  * Control: remove team from uploaders.
+  * Control: point VCS links to private namespace.
+  * Copyright: bump years.
+  * Bump Standards-Version to 4.7.0 (from 4.6.2; no further changes).
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Thu, 15 Aug 2024 03:27:38 +0000
+
+python-jaraco.functools (4.0.0-1) unstable; urgency=medium
+
+  * New upstream version 4.0.0
+  * Clean: remove, egg-info is autmatically cleaned now.
+  * Tests: replace d/tests with Testsuite: autopkgtest-pkg-pybuild.
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Sat, 09 Dec 2023 13:26:09 +0000
+
+python-jaraco.functools (3.7.0-1) unstable; urgency=medium
+
+  * New upstream version 3.7.0
+  * Bump Standards-Version to 4.6.2 (from 4.6.0; no further changes).
+  * Copyright: bump years.
+  * Control: add build-dep on pybuild-plugin-pyproject.
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Thu, 15 Jun 2023 13:04:16 +0000
+
+python-jaraco.functools (3.5.0-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Copyright: bump years.
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Mon, 04 Apr 2022 14:41:11 +0000
+
+python-jaraco.functools (3.4.0-2) unstable; urgency=medium
+
+  * Tests: use upstream testsuite as autopkgtest.
+
+ -- Jeroen Ploemen <jcfp@debian.org>  Sat, 20 Nov 2021 09:02:13 +0000
+
 python-jaraco.functools (3.4.0-1) unstable; urgency=medium
 
   * New upstream version 3.4.0

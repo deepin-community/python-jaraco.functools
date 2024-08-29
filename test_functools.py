@@ -16,8 +16,8 @@ from jaraco.functools import Throttler, method_cache, retry_call, retry
 class TestThrottler:
     @pytest.mark.xfail(
         os.environ.get('GITHUB_ACTIONS')  # type: ignore
-        and platform.system() == 'Darwin',
-        reason="Performance is heavily throttled on Github Actions Mac runs",
+        and platform.system() in ('Darwin', 'Windows'),
+        reason="Performance is heavily throttled on Github Actions Mac/Windows runs",
     )
     def test_function_throttled(self):
         """
@@ -214,7 +214,7 @@ class TestRetry:
         self.set_to_fail(times=calls)
         retry_call(self.attempt, retries=calls, cleanup=cleanup, trap=Exception)
         assert cleanup.call_count == calls
-        assert cleanup.called_with()
+        cleanup.assert_called_with()
 
     def test_infinite_retries(self):
         self.set_to_fail(times=999)
