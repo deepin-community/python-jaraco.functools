@@ -1,9 +1,11 @@
+import collections.abc
 import functools
-import time
 import inspect
-import collections
-import types
 import itertools
+import operator
+import time
+import types
+import warnings
 
 import more_itertools
 
@@ -11,6 +13,14 @@ import more_itertools
 def compose(*funcs):
     """
     Compose any number of unary functions into a single unary function.
+
+    Comparable to
+    `function composition <https://en.wikipedia.org/wiki/Function_composition>`_
+    in mathematics:
+
+    ``h = g ∘ f`` implies ``h(x) = g(f(x))``.
+
+    In Python, ``h = compose(g, f)``.
 
     >>> import textwrap
     >>> expected = str.strip(textwrap.dedent(compose.__doc__))
@@ -30,24 +40,6 @@ def compose(*funcs):
         return lambda *args, **kwargs: f1(f2(*args, **kwargs))
 
     return functools.reduce(compose_two, funcs)
-
-
-def method_caller(method_name, *args, **kwargs):
-    """
-    Return a function that will call a named method on the
-    target object with optional positional and keyword
-    arguments.
-
-    >>> lower = method_caller('lower')
-    >>> lower('MyString')
-    'mystring'
-    """
-
-    def call_method(target):
-        func = getattr(target, method_name)
-        return func(*args, **kwargs)
-
-    return call_method
 
 
 def once(func):
@@ -92,7 +84,7 @@ def once(func):
     return wrapper
 
 
-def method_cache(method, cache_wrapper=None):
+def method_cache(method, cache_wrapper=functools.lru_cache()):
     """
     Wrap lru_cache to support storing the cache data in the object instances.
 
@@ -159,7 +151,6 @@ def method_cache(method, cache_wrapper=None):
     http://code.activestate.com/recipes/577452-a-memoize-decorator-for-instance-methods/
     for another implementation and additional justification.
     """
-    cache_wrapper = cache_wrapper or functools.lru_cache()
 
     def wrapper(self, *args, **kwargs):
         # it's the first call, replace the method with a cached, bound method
@@ -187,12 +178,13 @@ def _special_method_cache(method, cache_wrapper):
     """
     name = method.__name__
     special_names = '__getattr__', '__getitem__'
+
     if name not in special_names:
-        return
+        return None
 
     wrapper_name = '__cached' + name
 
-    def proxy(self, *args, **kwargs):
+    def proxy(self, /, *args, **kwargs):
         if wrapper_name not in vars(self):
             bound = types.MethodType(method, self)
             cache = cache_wrapper(bound)
@@ -229,7 +221,7 @@ def result_invoke(action):
     r"""
     Decorate a function with an action function that is
     invoked on the results returned from the decorated
-    function (for its side-effect), then return the original
+    function (for its side effect), then return the original
     result.
 
     >>> @result_invoke(print)
@@ -253,11 +245,33 @@ def result_invoke(action):
     return wrap
 
 
-def call_aside(f, *args, **kwargs):
+def invoke(f, /, *args, **kwargs):
     """
     Call a function for its side effect after initialization.
 
-    >>> @call_aside
+    The benefit of using the decorator instead of simply invoking a function
+    after defining it is that it makes explicit the author's intent for the
+    function to be called immediately. Whereas if one simply calls the
+    function immediately, it's less obvious if that was intentional or
+    incidental. It also avoids repeating the name - the two actions, defining
+    the function and calling it immediately are modeled separately, but linked
+    by the decorator construct.
+
+    The benefit of having a function construct (opposed to just invoking some
+    behavior inline) is to serve as a scope in which the behavior occurs. It
+    avoids polluting the global namespace with local variables, provides an
+    anchor on which to attach documentation (docstring), keeps the behavior
+    logically separated (instead of conceptually separated or not separated at
+    all), and provides potential to re-use the behavior for testing or other
+    purposes.
+
+    This function is named as a pithy way to communicate, "call this function
+    primarily for its side effect", or "while defining this function, also
+    take it aside and call it". It exists because there's no Python construct
+    for "define and call" (nor should there be, as decorators serve this need
+    just fine). The behavior happens immediately and synchronously.
+
+    >>> @invoke
     ... def func(): print("called")
     called
     >>> func()
@@ -265,8 +279,8 @@ def call_aside(f, *args, **kwargs):
 
     Use functools.partial to pass parameters to the initial call
 
-    >>> @functools.partial(call_aside, name='bingo')
-    ... def func(name): print("called with", name)
+    >>> @functools.partial(invoke, name='bingo')
+    ... def func(name): print('called with', name)
     called with bingo
     """
     f(*args, **kwargs)
@@ -274,9 +288,7 @@ def call_aside(f, *args, **kwargs):
 
 
 class Throttler:
-    """
-    Rate-limit a function (or other callable)
-    """
+    """Rate-limit a function (or other callable)."""
 
     def __init__(self, func, max_rate=float('Inf')):
         if isinstance(func, Throttler):
@@ -293,20 +305,20 @@ class Throttler:
         return self.func(*args, **kwargs)
 
     def _wait(self):
-        "ensure at least 1/max_rate seconds from last call"
+        """Ensure at least 1/max_rate seconds from last call."""
         elapsed = time.time() - self.last_called
         must_wait = 1 / self.max_rate - elapsed
         time.sleep(max(0, must_wait))
         self.last_called = time.time()
 
-    def __get__(self, obj, type=None):
+    def __get__(self, obj, owner=None):
         return first_invoke(self._wait, functools.partial(self.func, obj))
 
 
 def first_invoke(func1, func2):
     """
     Return a function that when invoked will invoke func1 without
-    any parameters (for its side-effect) and then invoke func2
+    any parameters (for its side effect) and then invoke func2
     with whatever parameters were passed, returning its result.
     """
 
@@ -317,6 +329,17 @@ def first_invoke(func1, func2):
     return wrapper
 
 
+method_caller = first_invoke(
+    lambda: warnings.warn(
+        '`jaraco.functools.method_caller` is deprecated, '
+        'use `operator.methodcaller` instead',
+        DeprecationWarning,
+        stacklevel=3,
+    ),
+    operator.methodcaller,
+)
+
+
 def retry_call(func, cleanup=lambda: None, retries=0, trap=()):
     """
     Given a callable func, trap the indicated exceptions
@@ -325,7 +348,7 @@ def retry_call(func, cleanup=lambda: None, retries=0, trap=()):
     to propagate.
     """
     attempts = itertools.count() if retries == float('inf') else range(retries)
-    for attempt in attempts:
+    for _ in attempts:
         try:
             return func()
         except trap:
@@ -362,7 +385,7 @@ def retry(*r_args, **r_kwargs):
 
 def print_yielded(func):
     """
-    Convert a generator into a function that prints all yielded elements
+    Convert a generator into a function that prints all yielded elements.
 
     >>> @print_yielded
     ... def x():
@@ -378,7 +401,7 @@ def print_yielded(func):
 
 def pass_none(func):
     """
-    Wrap func so it's not called if its first param is None
+    Wrap func so it's not called if its first param is None.
 
     >>> print_text = pass_none(print)
     >>> print_text('text')
@@ -387,9 +410,10 @@ def pass_none(func):
     """
 
     @functools.wraps(func)
-    def wrapper(param, *args, **kwargs):
+    def wrapper(param, /, *args, **kwargs):
         if param is not None:
             return func(param, *args, **kwargs)
+        return None
 
     return wrapper
 
@@ -463,7 +487,7 @@ def save_method_args(method):
     args_and_kwargs = collections.namedtuple('args_and_kwargs', 'args kwargs')
 
     @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, /, *args, **kwargs):
         attr_name = '_saved_' + method.__name__
         attr = args_and_kwargs(args, kwargs)
         setattr(self, attr_name, attr)
@@ -510,3 +534,108 @@ def except_(*exceptions, replace=None, use=None):
         return wrapper
 
     return decorate
+
+
+def identity(x):
+    """
+    Return the argument.
+
+    >>> o = object()
+    >>> identity(o) is o
+    True
+    """
+    return x
+
+
+def bypass_when(check, *, _op=identity):
+    """
+    Decorate a function to return its parameter when ``check``.
+
+    >>> bypassed = []  # False
+
+    >>> @bypass_when(bypassed)
+    ... def double(x):
+    ...     return x * 2
+    >>> double(2)
+    4
+    >>> bypassed[:] = [object()]  # True
+    >>> double(2)
+    2
+    """
+
+    def decorate(func):
+        @functools.wraps(func)
+        def wrapper(param, /):
+            return param if _op(check) else func(param)
+
+        return wrapper
+
+    return decorate
+
+
+def bypass_unless(check):
+    """
+    Decorate a function to return its parameter unless ``check``.
+
+    >>> enabled = [object()]  # True
+
+    >>> @bypass_unless(enabled)
+    ... def double(x):
+    ...     return x * 2
+    >>> double(2)
+    4
+    >>> del enabled[:]  # False
+    >>> double(2)
+    2
+    """
+    return bypass_when(check, _op=operator.not_)
+
+
+@functools.singledispatch
+def _splat_inner(args, func):
+    """Splat args to func."""
+    return func(*args)
+
+
+@_splat_inner.register
+def _(args: collections.abc.Mapping, func):
+    """Splat kargs to func as kwargs."""
+    return func(**args)
+
+
+def splat(func):
+    """
+    Wrap func to expect its parameters to be passed positionally in a tuple.
+
+    Has a similar effect to that of ``itertools.starmap`` over
+    simple ``map``.
+
+    >>> pairs = [(-1, 1), (0, 2)]
+    >>> more_itertools.consume(itertools.starmap(print, pairs))
+    -1 1
+    0 2
+    >>> more_itertools.consume(map(splat(print), pairs))
+    -1 1
+    0 2
+
+    The approach generalizes to other iterators that don't have a "star"
+    equivalent, such as a "starfilter".
+
+    >>> list(filter(splat(operator.add), pairs))
+    [(0, 2)]
+
+    Splat also accepts a mapping argument.
+
+    >>> def is_nice(msg, code):
+    ...     return "smile" in msg or code == 0
+    >>> msgs = [
+    ...     dict(msg='smile!', code=20),
+    ...     dict(msg='error :(', code=1),
+    ...     dict(msg='unknown', code=0),
+    ... ]
+    >>> for msg in filter(splat(is_nice), msgs):
+    ...     print(msg)
+    {'msg': 'smile!', 'code': 20}
+    {'msg': 'unknown', 'code': 0}
+    """
+    return functools.wraps(func)(functools.partial(_splat_inner, func=func))

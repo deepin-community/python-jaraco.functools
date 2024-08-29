@@ -1,3 +1,85 @@
+v4.0.2
+======
+
+No significant changes.
+
+
+v4.0.1
+======
+
+No significant changes.
+
+
+v4.0.0
+======
+
+Features
+--------
+
+- Added ``splat`` function.
+
+
+Deprecations and Removals
+-------------------------
+
+- Removed deprecated 'call_aside'. (#21)
+
+
+v3.9.0
+======
+
+Features
+--------
+
+- Enhanced type hints and declare the package as typed. Module is now a package. (#22)
+
+
+v3.8.1
+======
+
+Bugfixes
+--------
+
+- Restored type checking and repaired broken exclusion. (#50550895)
+
+
+v3.8.0
+======
+
+Features
+--------
+
+- Require Python 3.8 or later.
+
+
+v3.7.0
+======
+
+Added ``bypass_unless`` and ``bypass_when`` and ``identity``.
+
+v3.6.0
+======
+
+#21: Renamed ``call_aside`` to ``invoke``, deprecating ``call_aside``.
+
+v3.5.2
+======
+
+Refreshed packaging.
+
+v3.5.1
+======
+
+Packaging refresh.
+
+Enrolled with Tidelift.
+
+v3.5.0
+======
+
+* #19: Add type annotations to ``method_cache``.
+* Require Python 3.7.
+
 v3.4.0
 ======
 
