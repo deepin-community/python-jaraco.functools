@@ -6,6 +6,7 @@ Maintainer: Jeroen Ploemen <jcfp@debian.org>
 Build-Depends:
  debhelper-compat (= 13),
  dh-python,
+ dh-sequence-python3,
  pybuild-plugin-pyproject,
  python3-all,
  python3-jaraco.classes <!nocheck>,
